@@ -143,6 +143,41 @@ function listenForBatteryAlarms(alarm) {
 }
 
 /**
+  Listen for manual tests and alert the user
+
+*/
+function listenForTestAlarms(alarm) {
+  var alarmState=false; // Assume manual test initially disabled
+
+  alarm.child('is_manual_test_active').ref().on('value', function (state) {
+    if (alarmState !== state.val()) { // only alert changes
+    	switch (state.val()) {
+    	case true:
+          notify('Heads Up', {
+            tag: alarm.child('device_id').val() + 'test_alarm_state',
+            body: 'Test has been detected by ' + alarm.child('name_long').val(),
+            color: alarm.child('ui_color_state').val()
+          });
+          break;
+        case false:
+          notify('Heads Up', {
+            tag: alarm.child('device_id').val() + 'test_alarm_state',
+            body: 'Test end has been detected by ' + alarm.child('name_long').val(),
+            color: alarm.child('ui_color_state').val()
+          });
+          break;
+        }
+    }
+    alarmState = state.val();
+  });
+}
+
+
+
+
+
+
+/**
   Start listening for changes on this account,
   update appropriate views as data changes.
 
@@ -158,6 +193,7 @@ if ('Notification' in window) {
       var alarm = smokeCOAlarms.child(id);
       listenForSmokeAlarms(alarm);
       listenForCOAlarms(alarm);
+      listenForTestAlarms(alarm);
       listenForBatteryAlarms(alarm);
     }
   });
